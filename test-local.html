@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Local Tailwind Test</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+</head>
+<body class="min-h-screen bg-gray-50 dark:bg-gray-900 p-8">
+  <h1 class="text-4xl font-bold text-gray-800 dark:text-white">Test 1: CDN with dark class on html</h1>
+  <p class="mt-4 text-gray-600 dark:text-gray-300">If dark, background should be gray-900 and text white.</p>
+  <button onclick="document.documentElement.classList.toggle('dark')" class="mt-4 px-4 py-2 bg-blue-500 text-white rounded">
+    Toggle Dark Mode
+  </button>
+</body>
+</html>
