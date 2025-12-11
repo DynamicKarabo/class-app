@@ -19,11 +19,8 @@ export default function ClassMonitoringApp() {
   };
 
   const [students, setStudents] = useState([
-    { id: 1, name: "Karabo", present: true, date: new Date().toLocaleDateString() },
-    { id: 2, name: "Tshenolo", present: false, date: new Date().toLocaleDateString() },
-    { id: 2, name: "Thato", present: false, date: new Date().toLocaleDateString() },
-    { id: 2, name: "Thokozani", present: false, date: new Date().toLocaleDateString() },
-    { id: 2, name: "Phila", present: false, date: new Date().toLocaleDateString() },
+    { id: 1, name: "Peter", present: true, date: new Date().toLocaleDateString() },
+    { id: 2, name: "John", present: false, date: new Date().toLocaleDateString() },
   ]);
 
   const [newName, setNewName] = useState("");
