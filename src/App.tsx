@@ -1,3 +1,33 @@
+// Add at the top of your component
+useEffect(() => {
+  console.log('Component mounted');
+  console.log('HTML has dark class?', document.documentElement.classList.contains('dark'));
+  console.log('All HTML classes:', document.documentElement.className);
+}, []);
+
+// Update toggle function
+const toggleDarkMode = () => {
+  console.log('=== TOGGLE CLICKED ===');
+  console.log('Before - darkMode state:', darkMode);
+  console.log('Before - HTML class:', document.documentElement.className);
+  
+  const html = document.documentElement;
+  const newDarkMode = !html.classList.contains('dark');
+  
+  if (newDarkMode) {
+    html.classList.add('dark');
+    console.log('Added dark class');
+  } else {
+    html.classList.remove('dark');
+    console.log('Removed dark class');
+  }
+  
+  setDarkMode(newDarkMode);
+  console.log('After - darkMode state:', newDarkMode);
+  console.log('After - HTML class:', html.className);
+  console.log('=== END TOGGLE ===');
+};
+
 import { useState, useEffect } from "react";
 import { Plus, Trash2, Users, Calendar } from "lucide-react";
 
