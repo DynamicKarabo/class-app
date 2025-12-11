@@ -22,7 +22,8 @@ A beautiful, responsive class attendance tracking system built with React, TypeS
 [https://class-app-alpha.vercel.app/]
 
 ## Screenshot
-![]()
+!https://i.postimg.cc/J01DGgJx/Screenshot-2025-12-11-184143.png
+!https://i.postimg.cc/TwvWXhPG/Screenshot-2025-12-11-184212.png
 
 ## License
 MIT
