@@ -5,16 +5,19 @@ export default function ClassMonitoringApp() {
   // Dark mode state
   const [darkMode, setDarkMode] = useState(false);
 
-    // Toggle dark mode
+      // Toggle dark mode
   const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    // Toggle dark class on html element
-    if (darkMode) {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
-    } else {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    
+    if (newDarkMode) {
       document.documentElement.classList.add('dark');
       document.body.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
     }
   };
 
