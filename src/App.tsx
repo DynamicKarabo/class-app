@@ -1,35 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus, Trash2, Users, Calendar } from "lucide-react";
 
 export default function ClassMonitoringApp() {
-  // Dark mode state - FIXED: Added proper type
-  const [darkMode, setDarkMode] = useState(false);
-
-  // Load saved theme on mount
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      setDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
-
-  // Toggle dark mode - FIXED: Using the state properly
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  };
-
   const [students, setStudents] = useState([
     { id: 1, name: "Peter", present: true, date: new Date().toLocaleDateString() },
     { id: 2, name: "John", present: false, date: new Date().toLocaleDateString() },
@@ -75,58 +47,38 @@ export default function ClassMonitoringApp() {
   const presentCount = students.filter((s) => s.present).length;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8 relative">
-          {/* Live Badge */}
-          <div className="absolute top-0 left-0">
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
-                <div className="absolute top-0 w-3 h-3 bg-red-600 rounded-full"></div>
-              </div>
-              <span className="text-sm font-bold text-red-600 animate-pulse">LIVE</span>
-            </div>
-          </div>
-
-          {/* Dark Mode Toggle Button */}
-          <button
-            onClick={toggleDarkMode}
-            className="absolute top-0 right-0 p-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 z-50"
-            aria-label="Toggle dark mode"
-          >
-            {darkMode ? '☀️' : '🌙'}
-          </button>
-          
-          <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-800 mb-2">
             Class Monitoring
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300 flex items-center justify-center gap-2">
+          <p className="text-lg text-gray-600 flex items-center justify-center gap-2">
             <Calendar className="w-5 h-5" />
             {today}
           </p>
         </div>
 
         {/* Stats Card */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Users className="w-8 h-8 text-indigo-600" />
               <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400">Total Students</p>
-                <p className="text-2xl font-bold text-gray-800 dark:text-white">{students.length}</p>
+                <p className="text-sm text-gray-500">Total Students</p>
+                <p className="text-2xl font-bold text-gray-800">{students.length}</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm text-gray-500 dark:text-gray-400">Present Today</p>
+              <p className="text-sm text-gray-500">Present Today</p>
               <p className="text-3xl font-bold text-green-600">{presentCount}</p>
             </div>
           </div>
         </div>
 
         {/* Add Student */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
           <div className="flex gap-3">
             <input
               type="text"
@@ -134,7 +86,7 @@ export default function ClassMonitoringApp() {
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addStudent()}
               placeholder="Enter student name..."
-              className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="flex-1 px-4 py-3 rounded-xl border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500"
             />
             <button
               onClick={addStudent}
@@ -156,13 +108,13 @@ export default function ClassMonitoringApp() {
             students.map((student) => (
               <div
                 key={student.id}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex items-center justify-between transform transition hover:scale-[1.02]"
+                className="bg-white rounded-2xl shadow-lg p-6 flex items-center justify-between transform transition hover:scale-[1.02]"
               >
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-white">
+                  <h3 className="text-xl font-semibold text-gray-800">
                     {student.name}
                   </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-sm text-gray-500 mt-1">
                     Last updated: {student.date}
                   </p>
                 </div>
@@ -181,7 +133,7 @@ export default function ClassMonitoringApp() {
 
                   <button
                     onClick={() => deleteStudent(student.id)}
-                    className="p-3 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition"
+                    className="p-3 text-red-500 hover:bg-red-50 rounded-xl transition"
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
