@@ -1,26 +1,33 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Plus, UserCheck, UserX } from "lucide-react";
 
+interface Student {
+  id: number;
+  name: string;
+  present: boolean;
+  date: string;
+}
+
 export default function ClassMonitoringApp() {
-  const [students, setStudents] = useState(() => {
+  const [students, setStudents] = useState<Student[]>(() => {
     const saved = localStorage.getItem("classStudents");
     return saved ? JSON.parse(saved) : [{ id: 1, name: "John Doe", present: false, date: new Date().toLocaleDateString("en-ZA") }];
   });
 
   useEffect(() => localStorage.setItem("classStudents", JSON.stringify(students)), [students]);
 
-  const toggleAttendance = (id) => {
-    setStudents(prev => prev.map(s => s.id === id ? { ...s, present: !s.present, date: new Date().toLocaleDateString("en-ZA") } : s));
+  const toggleAttendance = (id: number) => {
+    setStudents((prev: Student[]) => prev.map((s: Student) => s.id === id ? { ...s, present: !s.present, date: new Date().toLocaleDateString("en-ZA") } : s));
   };
 
   const addStudent = () => {
     const name = prompt("Enter student's full name:");
     if (name?.trim()) {
-      setStudents(prev => [...prev, { id: Date.now(), name: name.trim(), present: false, date: new Date().toLocaleDateString("en-ZA") }]);
+      setStudents((prev: Student[]) => [...prev, { id: Date.now(), name: name.trim(), present: false, date: new Date().toLocaleDateString("en-ZA") }]);
     }
   };
 
-  const presentCount = students.filter(s => s.present).length;
+  const presentCount = students.filter((s: Student) => s.present).length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-100 py-8 px-4">
@@ -38,7 +45,7 @@ export default function ClassMonitoringApp() {
         </button>
 
         <div className="space-y-4">
-          {students.map(s => (
+          {students.map((s: Student) => (
             <div key={s.id} className="bg-white rounded-2xl shadow-lg p-6 flex items-center justify-between">
               <div>
                 <p className="text-2xl font-bold text-gray-800">{s.name}</p>
