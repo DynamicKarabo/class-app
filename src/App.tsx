@@ -5,15 +5,25 @@ export default function ClassMonitoringApp() {
   // Dark mode state
   const [darkMode, setDarkMode] = useState(false);
 
-  // Toggle dark mode
+    // Toggle dark mode
   const toggleDarkMode = () => {
     setDarkMode(!darkMode);
-    document.documentElement.classList.toggle('dark');
+    // Toggle dark class on html element
+    if (darkMode) {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    } else {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    }
   };
 
   const [students, setStudents] = useState([
-    { id: 1, name: "Karabo Dynamic", present: true, date: new Date().toLocaleDateString() },
-    { id: 2, name: "John Doe", present: false, date: new Date().toLocaleDateString() },
+    { id: 1, name: "Karabo", present: true, date: new Date().toLocaleDateString() },
+    { id: 2, name: "Tshenolo", present: false, date: new Date().toLocaleDateString() },
+    { id: 2, name: "Thato", present: false, date: new Date().toLocaleDateString() },
+    { id: 2, name: "Thokozani", present: false, date: new Date().toLocaleDateString() },
+    { id: 2, name: "Phila", present: false, date: new Date().toLocaleDateString() },
   ]);
 
   const [newName, setNewName] = useState("");
