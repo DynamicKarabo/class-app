@@ -6,34 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Class Monitoring</title>
     
-    <!-- Tailwind CSS CDN - This will definitely work -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Optional: Add custom config for better colors -->
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              primary: '#4f46e5',
-              secondary: '#7c3aed',
-              accent: '#f472b6'
-            }
-          }
-        }
-      }
-    </script>
-    
-    <!-- Optional: Add Inter font -->
+    <!-- Font only - NO Tailwind CDN (local Tailwind will be used via main.tsx) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-      body { font-family: 'Inter', sans-serif; }
+      body { 
+        font-family: 'Inter', sans-serif;
+        margin: 0;
+        padding: 0;
+      }
     </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Initialize dark mode from localStorage -->
+    <script>
+      // Check for saved theme or user preference
+      const savedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      
+      if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+        document.documentElement.classList.add('dark');
+      }
+    </script>
   </body>
 </html>
