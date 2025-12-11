@@ -5,31 +5,33 @@ export default function ClassMonitoringApp() {
   // Dark mode state
   const [darkMode, setDarkMode] = useState(false);
 
-  // Load saved theme on mount
+  // Initialize dark mode from localStorage
   useEffect(() => {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-      setDarkMode(true);
       document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
+      setDarkMode(true);
+    } else {
+      document.documentElement.classList.remove('dark');
+      setDarkMode(false);
     }
   }, []);
 
-  // Toggle dark mode
+  // Toggle dark mode - WORKING VERSION
   const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
+    const html = document.documentElement;
+    const isCurrentlyDark = html.classList.contains('dark');
     
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.classList.remove('dark');
+    if (isCurrentlyDark) {
+      html.classList.remove('dark');
       localStorage.setItem('theme', 'light');
+      setDarkMode(false);
+    } else {
+      html.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+      setDarkMode(true);
     }
   };
 
