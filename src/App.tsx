@@ -1,11 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Trash2, Users, Calendar } from "lucide-react";
 
 export default function ClassMonitoringApp() {
   // Dark mode state
   const [darkMode, setDarkMode] = useState(false);
 
-      // Toggle dark mode
+  // Load saved theme on mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      setDarkMode(true);
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    }
+  }, []);
+
+  // Toggle dark mode
   const toggleDarkMode = () => {
     const newDarkMode = !darkMode;
     setDarkMode(newDarkMode);
@@ -70,6 +82,17 @@ export default function ClassMonitoringApp() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8 relative">
+          {/* Live Badge */}
+          <div className="absolute top-0 left-0">
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <div className="w-3 h-3 bg-red-500 rounded-full animate-ping"></div>
+                <div className="absolute top-0 w-3 h-3 bg-red-600 rounded-full"></div>
+              </div>
+              <span className="text-sm font-bold text-red-600 animate-pulse">LIVE</span>
+            </div>
+          </div>
+
           {/* Dark Mode Toggle Button */}
           <button
             onClick={toggleDarkMode}
