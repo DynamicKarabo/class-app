@@ -2,6 +2,15 @@ import { useState } from "react";
 import { Plus, Trash2, Users, Calendar } from "lucide-react";
 
 export default function ClassMonitoringApp() {
+  // Dark mode state
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Toggle dark mode
+  const toggleDarkMode = () => {
+    setDarkMode(!darkMode);
+    document.documentElement.classList.toggle('dark');
+  };
+
   const [students, setStudents] = useState([
     { id: 1, name: "Karabo Dynamic", present: true, date: new Date().toLocaleDateString() },
     { id: 2, name: "John Doe", present: false, date: new Date().toLocaleDateString() },
@@ -50,7 +59,16 @@ export default function ClassMonitoringApp() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 py-8 px-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
+        <div className="text-center mb-8 relative">
+          {/* Dark Mode Toggle Button */}
+          <button
+            onClick={toggleDarkMode}
+            className="absolute top-0 right-0 p-3 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg hover:shadow-xl transform hover:scale-110 transition-all duration-300 z-50"
+            aria-label="Toggle dark mode"
+          >
+            {darkMode ? '☀️' : '🌙'}
+          </button>
+          
           <h1 className="text-4xl font-bold text-gray-800 dark:text-white mb-2">
             Class Monitoring
           </h1>
