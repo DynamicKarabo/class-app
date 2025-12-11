@@ -6,12 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Class Monitoring</title>
     
-    <!-- Tailwind CSS CDN - This will definitely work -->
+    <!-- Tailwind CSS CDN with dark mode enabled -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Optional: Add custom config for better colors -->
     <script>
       tailwind.config = {
+        darkMode: 'class',
         theme: {
           extend: {
             colors: {
@@ -24,7 +23,7 @@
       }
     </script>
     
-    <!-- Optional: Add Inter font -->
+    <!-- Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -32,7 +31,7 @@
       body { font-family: 'Inter', sans-serif; }
     </style>
   </head>
-  <body>
+  <body class="bg-gray-50">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
