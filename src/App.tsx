@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Plus, Trash2, Users, Calendar, Download, Shuffle } from "lucide-react";
-import confetti from "canvas-confetti"; // You'll need to install this: npm install canvas-confetti
 
 export default function ClassMonitoringApp() {
   const [students, setStudents] = useState([
@@ -58,7 +57,7 @@ export default function ClassMonitoringApp() {
       "data:text/csv;charset=utf-8," +
       [headers, ...rows].map((row) => row.join(",")).join("\n");
 
-    const encodedUri = encodeURI(csvContent);
+    const encodedUri = encodeURI(csvContent.encodedUri);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", `attendance-${new Date().toISOString().split("T")[0]}.csv`);
@@ -77,12 +76,47 @@ export default function ClassMonitoringApp() {
     const picked = presentStudents[randomIndex];
     setSelectedStudentId(picked.id);
 
-    // Confetti celebration!
-    confetti({
-      particleCount: 100,
-      spread: 70,
-      origin: { y: 0.6 },
-    });
+    // Lightweight confetti effect without external library
+    const confettiContainer = document.createElement("div");
+    confettiContainer.style.position = "fixed";
+    confettiContainer.style.top = "0";
+    confettiContainer.style.left = "0";
+    confettiContainer.style.width = "100%";
+    confettiContainer.style.height = "100%";
+    confettiContainer.style.pointerEvents = "none";
+    confettiContainer.style.zIndex = "9999";
+    document.body.appendChild(confettiContainer);
+
+    for (let i = 0; i < 80; i++) {
+      const confetti = document.createElement("div");
+      confetti.style.position = "absolute";
+      confetti.style.width = "10px";
+      confetti.style.height = "10px";
+      confetti.style.backgroundColor = ["#f00", "#0f0", "#00f", "#ff0", "#f0f"][Math.floor(Math.random() * 5)];
+      confetti.style.left = Math.random() * 100 + "vw";
+      confetti.style.top = "-10px";
+      confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+      confetti.style.animation = "fall 3s linear forwards";
+      confettiContainer.appendChild(confetti);
+    }
+
+    // Add simple fall animation
+    const style = document.createElement("style");
+    style.textContent = `
+      @keyframes fall {
+        to {
+          transform: translateY(100vh) rotate(720deg);
+          opacity: 0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+
+    // Clean up after animation
+    setTimeout(() => {
+      document.body.removeChild(confettiContainer);
+      document.head.removeChild(style);
+    }, 3000);
   };
 
   const presentCount = students.filter((s) => s.present).length;
