@@ -8,7 +8,6 @@ A beautiful, responsive class attendance tracking system built with React, TypeS
 - 👥 Student management (add/delete)  
 - 📈 Live statistics dashboard  
 - 🎨 Modern, responsive UI  
-- 🌓 Dark mode ready  
 - 🚀 Deployed on Vercel
 - - 📁 Bulk import of student names from CSV/TXT files
   - - 🔍 Roster filtering by Present/Absent status
