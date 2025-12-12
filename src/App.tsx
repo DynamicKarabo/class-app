@@ -505,7 +505,7 @@ export default function ClassMonitoringApp() {
         {/* Footer with credits */}
         <div className="mt-12 pt-8 border-t border-gray-200 dark:border-gray-700 text-center">
           <p className="text-gray-500 dark:text-gray-400 text-sm font-medium">
-            Built and Designed with ❤️ by Karabo Oliphant
+            Built and Designed with ❤️ by Karabo Oliphant. © All Rights Reserved 2025
           </p>
         </div>
       </div>
