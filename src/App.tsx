@@ -81,7 +81,16 @@ export default function ClassMonitoringApp() {
     
     // Find the button's position to launch confetti from
     const button = document.querySelector('.confetti-launch-button');
-    const buttonRect = button ? button.getBoundingClientRect() : { top: window.innerHeight / 2, left: window.innerWidth / 2 };
+    
+    // FIX: Ensure the fallback object has width and height properties to satisfy TypeScript
+    const buttonRect = button 
+        ? button.getBoundingClientRect() 
+        : { 
+            top: window.innerHeight / 2, 
+            left: window.innerWidth / 2, 
+            width: 0, 
+            height: 0 // Added width and height properties
+          };
 
     const confettiContainer = document.createElement("div");
     confettiContainer.style.position = "fixed";
