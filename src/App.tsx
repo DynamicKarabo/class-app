@@ -1,8 +1,17 @@
 import { useState } from "react";
-import { Plus, Trash2, Users, Calendar, Download, Shuffle } from "lucide-react";
+// Import Upload icon for the new feature
+import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload } from "lucide-react";
+
+// Define the type for a student object
+interface Student {
+    id: number;
+    name: string;
+    present: boolean;
+    date: string;
+}
 
 export default function ClassMonitoringApp() {
-  const [students, setStudents] = useState([
+  const [students, setStudents] = useState<Student[]>([
     { id: 1, name: "Peter", present: true, date: new Date().toLocaleDateString() },
     { id: 2, name: "John", present: false, date: new Date().toLocaleString() },
   ]);
@@ -45,6 +54,47 @@ export default function ClassMonitoringApp() {
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
 
+  // --- NEW FEATURE FUNCTIONALITY ---
+  const importStudentsFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Use FileReader to read the file contents
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const content = e.target?.result as string;
+      // Split the content by newline, filtering out empty lines, and trimming whitespace.
+      // This supports simple TXT files or single-column CSVs.
+      const names = content
+        .split('\n')
+        .map(name => name.trim())
+        .filter(name => name.length > 0);
+
+      const newStudents: Student[] = names.map(name => ({
+        id: Date.now() + Math.random(), // Ensure unique ID even if added in bulk
+        name: name,
+        present: false,
+        date: new Date().toLocaleDateString(),
+      }));
+
+      // Append new students to the existing list
+      setStudents(prev => [...prev, ...newStudents]);
+      alert(`Successfully imported ${newStudents.length} students!`);
+    };
+
+    reader.onerror = () => {
+      alert("Error reading file.");
+    };
+
+    // Read the file as text
+    reader.readAsText(file);
+    
+    // Reset the file input value so the same file can be uploaded again if needed
+    event.target.value = '';
+  };
+  // --- END NEW FEATURE FUNCTIONALITY ---
+
   const exportToCSV = () => {
     const headers = ["Name", "Status", "Last Updated"];
     const rows = students.map((s) => [
@@ -76,20 +126,18 @@ export default function ClassMonitoringApp() {
     const picked = presentStudents[randomIndex];
     setSelectedStudentId(picked.id);
 
-    // --- START: DYNAMIC CONFETTI LOGIC ---
-    const colors = ["#2563EB", "#FACC15", "#48BB78", "#F56565", "#9F7AEA"]; // Brand blue + bright accents
+    // --- DYNAMIC CONFETTI LOGIC (RETAINED) ---
+    const colors = ["#2563EB", "#FACC15", "#48BB78", "#F56565", "#9F7AEA"]; 
     
-    // Find the button's position to launch confetti from
     const button = document.querySelector('.confetti-launch-button');
     
-    // FIX: Ensure the fallback object has width and height properties to satisfy TypeScript
     const buttonRect = button 
         ? button.getBoundingClientRect() 
         : { 
             top: window.innerHeight / 2, 
             left: window.innerWidth / 2, 
             width: 0, 
-            height: 0 // Added width and height properties
+            height: 0
           };
 
     const confettiContainer = document.createElement("div");
@@ -102,24 +150,21 @@ export default function ClassMonitoringApp() {
     confettiContainer.style.zIndex = "9999";
     document.body.appendChild(confettiContainer);
 
-    // Inject dynamic, randomized keyframes
     const style = document.createElement("style");
     let keyframeContent = '';
 
     for (let i = 0; i < 100; i++) {
-        const duration = (2 + Math.random() * 1.5).toFixed(2); // 2.0s to 3.5s duration
-        const delay = (Math.random() * 0.5).toFixed(2); // up to 0.5s delay
+        const duration = (2 + Math.random() * 1.5).toFixed(2); 
+        const delay = (Math.random() * 0.5).toFixed(2); 
         const initialX = buttonRect.left + (buttonRect.width / 2);
         const initialY = buttonRect.top + (buttonRect.height / 2);
         
-        // Random horizontal spread and upward burst (negative Y)
-        const endX = initialX + (Math.random() - 0.5) * 800; // Spread horizontally 800px
-        const endY = window.innerHeight * 1.5; // Fall far down
-        const midY = initialY - (Math.random() * 200 + 100); // Burst 100-300px up
+        const endX = initialX + (Math.random() - 0.5) * 800; 
+        const endY = window.innerHeight * 1.5; 
+        const midY = initialY - (Math.random() * 200 + 100); 
         
-        // Dynamic rotation
         const rotateStart = Math.random() * 360;
-        const rotateEnd = rotateStart + (Math.random() > 0.5 ? 1000 : -1000); // Spin 1000 degrees
+        const rotateEnd = rotateStart + (Math.random() > 0.5 ? 1000 : -1000); 
 
         keyframeContent += `
           @keyframes confetti-burst-${i} {
@@ -128,7 +173,7 @@ export default function ClassMonitoringApp() {
               opacity: 1;
             }
             30% {
-              transform: translate(${endX}px, ${midY}px) rotate(${rotateStart + 360}deg); /* Upward peak */
+              transform: translate(${endX}px, ${midY}px) rotate(${rotateStart + 360}deg);
             }
             100% {
               transform: translate(${endX}px, ${endY}px) rotate(${rotateEnd}deg);
@@ -139,10 +184,10 @@ export default function ClassMonitoringApp() {
 
         const confetti = document.createElement("div");
         confetti.style.position = "absolute";
-        confetti.style.width = (5 + Math.random() * 5) + "px"; // 5px to 10px size
-        confetti.style.height = (5 + Math.random() * 10) + "px"; // Variable height for paper strips
+        confetti.style.width = (5 + Math.random() * 5) + "px";
+        confetti.style.height = (5 + Math.random() * 10) + "px"; 
         confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
-        confetti.style.borderRadius = (Math.random() > 0.5 ? '50%' : '2px'); // Mix of circles and rectangles
+        confetti.style.borderRadius = (Math.random() > 0.5 ? '50%' : '2px'); 
         confetti.style.animation = `confetti-burst-${i} ${duration}s cubic-bezier(0.2, 0.2, 0.8, 0.8) ${delay}s forwards`;
         confettiContainer.appendChild(confetti);
     }
@@ -157,8 +202,8 @@ export default function ClassMonitoringApp() {
       if (document.head.contains(style)) {
         document.head.removeChild(style);
       }
-    }, 4500); // Ensure cleanup after the longest animation duration
-    // --- END: DYNAMIC CONFETTI LOGIC ---
+    }, 4500); 
+    // --- END DYNAMIC CONFETTI LOGIC ---
   };
 
   const presentCount = students.filter((s) => s.present).length;
@@ -203,7 +248,26 @@ export default function ClassMonitoringApp() {
         </div>
 
         {/* Action Buttons */}
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-8">
+          
+          {/* NEW: Import Students Button */}
+          <div className="relative">
+            <input
+              type="file"
+              id="student-import"
+              accept=".txt,.csv" // Accept text or CSV files
+              onChange={importStudentsFromFile}
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+            />
+            <label 
+              htmlFor="student-import"
+              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+            >
+              <Upload className="w-5 h-5" />
+              Import List
+            </label>
+          </div>
+
           <button
             onClick={exportToCSV}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl"
@@ -213,7 +277,6 @@ export default function ClassMonitoringApp() {
           </button>
           <button
             onClick={pickRandomStudent}
-            // Added class name to easily find this button's position for confetti launch
             className="confetti-launch-button bg-teal-500 hover:bg-teal-600 text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-teal-500/30 hover:shadow-xl"
           >
             <Shuffle className="w-5 h-5" />
@@ -229,7 +292,7 @@ export default function ClassMonitoringApp() {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addStudent()}
-              placeholder="Enter student name..."
+              placeholder="Or manually add student name..."
               className="flex-1 px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
@@ -248,7 +311,7 @@ export default function ClassMonitoringApp() {
           {students.length === 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
               <Users className="w-8 h-8 mx-auto mb-3" />
-              <p className="font-medium">No students yet. Add one above to start tracking!</p>
+              <p className="font-medium">No students yet. Import a list or add one above to start tracking!</p>
             </div>
           ) : (
             students.map((student) => (
