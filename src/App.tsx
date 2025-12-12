@@ -1,6 +1,6 @@
-import { useState } from "react";
-// Import Upload and RotateCcw for the new features
-import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+// Import icons for the new features: Sun (Light Mode), Moon (Dark Mode), and Trash2 (Delete All)
+import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, Sun, Moon } from "lucide-react";
 
 // Define the type for a student object
 interface Student {
@@ -11,10 +11,32 @@ interface Student {
 }
 
 export default function ClassMonitoringApp() {
-  // REMOVED INITIAL EXAMPLE STUDENTS: John and Peter
   const [students, setStudents] = useState<Student[]>([]); 
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
+  
+  // --- NEW: Dark Mode State ---
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const savedTheme = localStorage.getItem('theme');
+      return savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    }
+    return false;
+  });
+
+  // --- NEW: Dark Mode Effect ---
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [isDarkMode]);
+
+  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
+  // -----------------------------
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -51,6 +73,20 @@ export default function ClassMonitoringApp() {
     setStudents((prev) => prev.filter((s) => s.id !== id));
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
+  
+  // --- NEW: Delete All Students Function ---
+  const deleteAllStudents = () => {
+    const isConfirmed = window.confirm(
+      "WARNING: This action is irreversible. Are you absolutely sure you want to permanently delete ALL students from the roster?"
+    );
+
+    if (isConfirmed) {
+      setStudents([]); // Set the student list to an empty array
+      setSelectedStudentId(null);
+      alert("All students have been permanently deleted.");
+    }
+  };
+  // ----------------------------------------
 
   const importStudentsFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -97,7 +133,7 @@ export default function ClassMonitoringApp() {
           date: new Date().toLocaleDateString(),
         }))
       );
-      setSelectedStudentId(null); // Clear random pick highlight
+      setSelectedStudentId(null);
       alert("Attendance list has been reset for the new session.");
     }
   };
@@ -218,21 +254,33 @@ export default function ClassMonitoringApp() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-4 transition-colors">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-10">
-          <div className="flex items-center justify-center gap-2 mb-3">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-graduation-cap"><path d="M21.42 10.976a2 2 0 0 0-.251-.43l-8-5.5.01-.01a2 2 0 0 0-2.348-.002l-8 5.5a2 2 0 0 0 0 3.107l8 5.5.01-.01a2 2 0 0 0 2.348-.002l8-5.5a2 2 0 0 0 0-3.107v0z"/><path d="M12 4v16"/><path d="M3.46 11.08l8.5 5.5 8.5-5.5"/></svg>
-            <h1 className="text-4xl font-extrabold text-gray-800 dark:text-gray-100">
-              EduTrack
-            </h1>
+        
+        {/* Header (Modified to include Dark Mode Toggle) */}
+        <div className="flex items-start justify-between mb-10">
+          <div className="text-center w-full">
+            <div className="flex items-center justify-center gap-2 mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-graduation-cap"><path d="M21.42 10.976a2 2 0 0 0-.251-.43l-8-5.5.01-.01a2 2 0 0 0-2.348-.002l-8 5.5a2 2 0 0 0 0 3.107l8 5.5.01-.01a2 2 0 0 0 2.348-.002l8-5.5a2 2 0 0 0 0-3.107v0z"/><path d="M12 4v16"/><path d="M3.46 11.08l8.5 5.5 8.5-5.5"/></svg>
+              <h1 className="text-4xl font-extrabold text-gray-800 dark:text-gray-100">
+                EduTrack
+              </h1>
+            </div>
+            <p className="text-xl font-medium text-gray-700 dark:text-gray-300">
+              Class Monitoring Dashboard
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center justify-center gap-2">
+              <Calendar className="w-4 h-4" />
+              {today}
+            </p>
           </div>
-          <p className="text-xl font-medium text-gray-700 dark:text-gray-300">
-            Class Monitoring Dashboard
-          </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center justify-center gap-2">
-            <Calendar className="w-4 h-4" />
-            {today}
-          </p>
+          
+          {/* NEW: Dark Mode Toggle Button */}
+          <button
+            onClick={toggleDarkMode}
+            className="p-3 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors self-start ml-auto"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
         </div>
 
         {/* Stats Card */}
@@ -277,7 +325,7 @@ export default function ClassMonitoringApp() {
           {/* Reset Attendance Button */}
           <button
             onClick={resetAttendance}
-            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
+            className="flex-1 bg-red-500/80 hover:bg-red-600 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
           >
             <RotateCcw className="w-5 h-5" />
             Reset All
@@ -323,9 +371,22 @@ export default function ClassMonitoringApp() {
           </div>
         </div>
 
-        {/* Students List */}
+        {/* Students List Container */}
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-4">Class Roster</h2>
+          
+          {/* Roster Header (Modified to include Delete All Button) */}
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Class Roster</h2>
+            <button
+                onClick={deleteAllStudents}
+                className="text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center gap-1 font-medium"
+                title="Permanently Delete All Students"
+            >
+                <Trash2 className="w-5 h-5" />
+                Delete Roster
+            </button>
+          </div>
+
           {students.length === 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
               <Users className="w-8 h-8 mx-auto mb-3" />
