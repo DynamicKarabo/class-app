@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-// Import icons for the new features
-import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, Sun, Moon } from "lucide-react";
+import { useState } from "react";
+import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw } from "lucide-react";
 
 // Define the type for a student object
 interface Student {
@@ -10,46 +9,15 @@ interface Student {
     date: string;
 }
 
-// Function to get the initial dark mode status from localStorage or system preference
-const getInitialDarkMode = (): boolean => {
-    if (typeof window !== 'undefined') {
-        const savedTheme = localStorage.getItem('theme');
-        // Check saved theme first, then system preference
-        if (savedTheme === 'dark') {
-            return true;
-        }
-        if (savedTheme === 'light') {
-            return false;
-        }
-        // Fallback to system preference if no theme is saved
-        return window.matchMedia('(prefers-color-scheme: dark)').matches;
-    }
-    return false;
-};
-
+// Define the type for filter options
+type FilterStatus = 'ALL' | 'PRESENT' | 'ABSENT';
 
 export default function ClassMonitoringApp() {
   const [students, setStudents] = useState<Student[]>([]); 
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-  
-  // --- CORRECTED: Dark Mode State Initialization ---
-  const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
-
-  // --- CORRECTED: Dark Mode Effect to apply changes and save preference ---
-  useEffect(() => {
-    const root = document.documentElement;
-    if (isDarkMode) {
-      root.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
-    } else {
-      root.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
-    }
-  }, [isDarkMode]);
-
-  const toggleDarkMode = () => setIsDarkMode(prev => !prev);
-  // ------------------------------------------------
+  // --- NEW: Filter State ---
+  const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -87,19 +55,17 @@ export default function ClassMonitoringApp() {
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
   
-  // --- Delete All Students Function ---
   const deleteAllStudents = () => {
     const isConfirmed = window.confirm(
       "WARNING: This action is irreversible. Are you absolutely sure you want to permanently delete ALL students from the roster?"
     );
 
     if (isConfirmed) {
-      setStudents([]); // Set the student list to an empty array
+      setStudents([]); 
       setSelectedStudentId(null);
       alert("All students have been permanently deleted.");
     }
   };
-  // ----------------------------------------
 
   const importStudentsFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -264,36 +230,37 @@ export default function ClassMonitoringApp() {
 
   const presentCount = students.filter((s) => s.present).length;
 
+  // --- NEW: Filtered Students Calculation ---
+  const filteredStudents = students.filter((student) => {
+    if (filterStatus === 'PRESENT') {
+        return student.present;
+    }
+    if (filterStatus === 'ABSENT') {
+        return !student.present;
+    }
+    return true; // 'ALL' status
+  });
+  // ----------------------------------------
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-4 transition-colors">
       <div className="max-w-2xl mx-auto">
         
-        {/* Header (Modified to include Dark Mode Toggle) */}
-        <div className="flex items-start justify-between mb-10">
-          <div className="text-center w-full">
-            <div className="flex items-center justify-center gap-2 mb-3">
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-graduation-cap"><path d="M21.42 10.976a2 2 0 0 0-.251-.43l-8-5.5.01-.01a2 2 0 0 0-2.348-.002l-8 5.5a2 2 0 0 0 0 3.107l8 5.5.01-.01a2 2 0 0 0 2.348-.002l8-5.5a2 2 0 0 0 0-3.107v0z"/><path d="M12 4v16"/><path d="M3.46 11.08l8.5 5.5 8.5-5.5"/></svg>
-              <h1 className="text-4xl font-extrabold text-gray-800 dark:text-gray-100">
-                EduTrack
-              </h1>
-            </div>
-            <p className="text-xl font-medium text-gray-700 dark:text-gray-300">
-              Class Monitoring Dashboard
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center justify-center gap-2">
-              <Calendar className="w-4 h-4" />
-              {today}
-            </p>
+        {/* Header (Cleaned up alignment) */}
+        <div className="text-center mb-10">
+          <div className="flex items-center justify-center gap-2 mb-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#2563EB" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-graduation-cap"><path d="M21.42 10.976a2 2 0 0 0-.251-.43l-8-5.5.01-.01a2 2 0 0 0-2.348-.002l-8 5.5a2 2 0 0 0 0 3.107l8 5.5.01-.01a2 2 0 0 0 2.348-.002l8-5.5a2 2 0 0 0 0-3.107v0z"/><path d="M12 4v16"/><path d="M3.46 11.08l8.5 5.5 8.5-5.5"/></svg>
+            <h1 className="text-4xl font-extrabold text-gray-800 dark:text-gray-100">
+              EduTrack
+            </h1>
           </div>
-          
-          {/* Dark Mode Toggle Button */}
-          <button
-            onClick={toggleDarkMode}
-            className="p-3 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors self-start ml-auto"
-            aria-label="Toggle dark mode"
-          >
-            {isDarkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-          </button>
+          <p className="text-xl font-medium text-gray-700 dark:text-gray-300">
+            Class Monitoring Dashboard
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center justify-center gap-2">
+            <Calendar className="w-4 h-4" />
+            {today}
+          </p>
         </div>
 
         {/* Stats Card */}
@@ -400,13 +367,30 @@ export default function ClassMonitoringApp() {
             </button>
           </div>
 
-          {students.length === 0 ? (
+          {/* NEW: Filter Buttons */}
+          <div className="flex gap-2 mb-4 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-inner border border-gray-100 dark:border-gray-700">
+            {['ALL', 'PRESENT', 'ABSENT'].map((status) => (
+              <button
+                key={status}
+                onClick={() => setFilterStatus(status as FilterStatus)}
+                className={`flex-1 py-2 rounded-lg text-sm font-semibold transition-colors ${
+                  filterStatus === status
+                    ? 'bg-blue-600 text-white shadow-md'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}
+              >
+                {status.charAt(0) + status.slice(1).toLowerCase()}
+              </button>
+            ))}
+          </div>
+
+          {filteredStudents.length === 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
               <Users className="w-8 h-8 mx-auto mb-3" />
-              <p className="font-medium">No students yet. Import a list or add one above to start tracking!</p>
+              <p className="font-medium">No students currently set to **{filterStatus}**.</p>
             </div>
           ) : (
-            students.map((student) => (
+            filteredStudents.map((student) => (
               <div
                 key={student.id}
                 className={`bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-5 flex items-center justify-between transition-all duration-300 border border-gray-100 dark:border-gray-700 ${
