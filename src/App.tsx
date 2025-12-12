@@ -57,7 +57,7 @@ export default function ClassMonitoringApp() {
       "data:text/csv;charset=utf-8," +
       [headers, ...rows].map((row) => row.join(",")).join("\n");
 
-    const encodedUri = encodeURI(csvContent.encodedUri);
+    const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
     link.setAttribute("download", `attendance-${new Date().toISOString().split("T")[0]}.csv`);
@@ -76,7 +76,8 @@ export default function ClassMonitoringApp() {
     const picked = presentStudents[randomIndex];
     setSelectedStudentId(picked.id);
 
-    // Lightweight confetti effect without external library
+    // Lightweight confetti effect (no external deps)
+    const colors = ["#f56565", "#48bb78", "#4299e1", "#ed8936", "#9f7aea"];
     const confettiContainer = document.createElement("div");
     confettiContainer.style.position = "fixed";
     confettiContainer.style.top = "0";
@@ -92,7 +93,7 @@ export default function ClassMonitoringApp() {
       confetti.style.position = "absolute";
       confetti.style.width = "10px";
       confetti.style.height = "10px";
-      confetti.style.backgroundColor = ["#f00", "#0f0", "#00f", "#ff0", "#f0f"][Math.floor(Math.random() * 5)];
+      confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
       confetti.style.left = Math.random() * 100 + "vw";
       confetti.style.top = "-10px";
       confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
@@ -100,7 +101,6 @@ export default function ClassMonitoringApp() {
       confettiContainer.appendChild(confetti);
     }
 
-    // Add simple fall animation
     const style = document.createElement("style");
     style.textContent = `
       @keyframes fall {
@@ -112,10 +112,13 @@ export default function ClassMonitoringApp() {
     `;
     document.head.appendChild(style);
 
-    // Clean up after animation
     setTimeout(() => {
-      document.body.removeChild(confettiContainer);
-      document.head.removeChild(style);
+      if (document.body.contains(confettiContainer)) {
+        document.body.removeChild(confettiContainer);
+      }
+      if (document.head.contains(style)) {
+        document.head.removeChild(style);
+      }
     }, 3000);
   };
 
