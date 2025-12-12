@@ -16,7 +16,6 @@ export default function ClassMonitoringApp() {
   const [students, setStudents] = useState<Student[]>([]); 
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
-  // --- NEW: Filter State ---
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
 
   const today = new Date().toLocaleDateString("en-US", {
@@ -229,8 +228,10 @@ export default function ClassMonitoringApp() {
   };
 
   const presentCount = students.filter((s) => s.present).length;
+  const totalStudents = students.length;
+  const presentPercentage = totalStudents > 0 ? (presentCount / totalStudents) * 100 : 0;
 
-  // --- NEW: Filtered Students Calculation ---
+  // --- Filtered Students Calculation ---
   const filteredStudents = students.filter((student) => {
     if (filterStatus === 'PRESENT') {
         return student.present;
@@ -240,7 +241,6 @@ export default function ClassMonitoringApp() {
     }
     return true; // 'ALL' status
   });
-  // ----------------------------------------
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-4 transition-colors">
@@ -263,7 +263,7 @@ export default function ClassMonitoringApp() {
           </p>
         </div>
 
-        {/* Stats Card */}
+        {/* Stats Card (WITH PROGRESS BAR) */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 mb-8 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -272,7 +272,7 @@ export default function ClassMonitoringApp() {
               </div>
               <div>
                 <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Total Students</p>
-                <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{students.length}</p>
+                <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{totalStudents}</p>
               </div>
             </div>
             <div className="text-right">
@@ -280,6 +280,22 @@ export default function ClassMonitoringApp() {
               <p className="text-4xl font-extrabold text-blue-600 dark:text-blue-400">{presentCount}</p>
             </div>
           </div>
+          
+          {/* Progress Bar Visualization */}
+          {totalStudents > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
+                <div className="relative h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div 
+                        className="absolute top-0 left-0 h-full bg-green-500 rounded-full transition-all duration-500" 
+                        style={{ width: `${presentPercentage}%` }}
+                        title={`${Math.round(presentPercentage)}% Present`}
+                    ></div>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 text-right font-medium">
+                    {Math.round(presentPercentage)}% Attendance
+                </p>
+            </div>
+          )}
         </div>
 
         {/* Utility Actions (Import & Reset) */}
@@ -367,7 +383,7 @@ export default function ClassMonitoringApp() {
             </button>
           </div>
 
-          {/* NEW: Filter Buttons */}
+          {/* Filter Buttons */}
           <div className="flex gap-2 mb-4 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-inner border border-gray-100 dark:border-gray-700">
             {['ALL', 'PRESENT', 'ABSENT'].map((status) => (
               <button
@@ -411,11 +427,15 @@ export default function ClassMonitoringApp() {
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => toggleAttendance(student.id)}
-                    className={`px-4 py-2 rounded-lg font-medium text-white shadow-md transition-all transform hover:scale-105 min-w-[100px] ${
-                      student.present
+                    className={`
+                      px-4 py-2 rounded-lg font-medium text-white shadow-md transition-all 
+                      transform hover:scale-105 active:scale-95 duration-100 ease-out /* ADDED MICRO-INTERACTION */
+                      min-w-[100px] 
+                      ${student.present
                         ? "bg-green-500 hover:bg-green-600"
                         : "bg-red-500 hover:bg-red-600"
-                    }`}
+                      }
+                    `}
                   >
                     {student.present ? "Present" : "Absent"}
                   </button>
