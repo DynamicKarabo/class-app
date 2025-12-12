@@ -1,6 +1,6 @@
 import { useState } from "react";
-// Import Upload icon for the new feature
-import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload } from "lucide-react";
+// Import Upload and RotateCcw for the new features
+import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw } from "lucide-react";
 
 // Define the type for a student object
 interface Student {
@@ -13,7 +13,7 @@ interface Student {
 export default function ClassMonitoringApp() {
   const [students, setStudents] = useState<Student[]>([
     { id: 1, name: "Peter", present: true, date: new Date().toLocaleDateString() },
-    { id: 2, name: "John", present: false, date: new Date().toLocaleString() },
+    { id: 2, name: "John", present: false, date: new Date().toLocaleDateString() },
   ]);
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
@@ -54,31 +54,26 @@ export default function ClassMonitoringApp() {
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
 
-  // --- NEW FEATURE FUNCTIONALITY ---
   const importStudentsFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Use FileReader to read the file contents
     const reader = new FileReader();
 
     reader.onload = (e) => {
       const content = e.target?.result as string;
-      // Split the content by newline, filtering out empty lines, and trimming whitespace.
-      // This supports simple TXT files or single-column CSVs.
       const names = content
         .split('\n')
         .map(name => name.trim())
         .filter(name => name.length > 0);
 
       const newStudents: Student[] = names.map(name => ({
-        id: Date.now() + Math.random(), // Ensure unique ID even if added in bulk
+        id: Date.now() + Math.random(), 
         name: name,
         present: false,
         date: new Date().toLocaleDateString(),
       }));
 
-      // Append new students to the existing list
       setStudents(prev => [...prev, ...newStudents]);
       alert(`Successfully imported ${newStudents.length} students!`);
     };
@@ -87,13 +82,29 @@ export default function ClassMonitoringApp() {
       alert("Error reading file.");
     };
 
-    // Read the file as text
     reader.readAsText(file);
-    
-    // Reset the file input value so the same file can be uploaded again if needed
     event.target.value = '';
   };
-  // --- END NEW FEATURE FUNCTIONALITY ---
+  
+  // --- NEW: Reset Function ---
+  const resetAttendance = () => {
+    const isConfirmed = window.confirm(
+      "Are you sure you want to reset the attendance for ALL students? This will mark everyone as ABSENT for a new session."
+    );
+
+    if (isConfirmed) {
+      setStudents((prev) =>
+        prev.map((s) => ({
+          ...s,
+          present: false,
+          date: new Date().toLocaleDateString(),
+        }))
+      );
+      setSelectedStudentId(null); // Clear random pick highlight
+      alert("Attendance list has been reset for the new session.");
+    }
+  };
+  // --- END NEW FUNCTION ---
 
   const exportToCSV = () => {
     const headers = ["Name", "Status", "Last Updated"];
@@ -247,27 +258,38 @@ export default function ClassMonitoringApp() {
           </div>
         </div>
 
-        {/* Action Buttons */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          
-          {/* NEW: Import Students Button */}
-          <div className="relative">
+        {/* Utility Actions (Import & Reset) */}
+        <div className="flex justify-between gap-4 mb-4">
+          {/* Import Students Button */}
+          <div className="relative flex-1">
             <input
               type="file"
               id="student-import"
-              accept=".txt,.csv" // Accept text or CSV files
+              accept=".txt,.csv"
               onChange={importStudentsFromFile}
-              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+              className="absolute inset-0 opacity-0 cursor-pointer w-full h-full z-10"
             />
             <label 
               htmlFor="student-import"
-              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
+              className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
             >
               <Upload className="w-5 h-5" />
               Import List
             </label>
           </div>
 
+          {/* NEW: Reset Attendance Button */}
+          <button
+            onClick={resetAttendance}
+            className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
+          >
+            <RotateCcw className="w-5 h-5" />
+            Reset All
+          </button>
+        </div>
+
+        {/* Main Actions (Export & Random) */}
+        <div className="grid grid-cols-2 gap-4 mb-8">
           <button
             onClick={exportToCSV}
             className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-blue-500/30 hover:shadow-xl"
