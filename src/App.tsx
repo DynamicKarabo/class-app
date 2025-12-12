@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw } from "lucide-react";
+import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, XCircle } from "lucide-react"; // Imported XCircle for the close button
 
 // Define the type for a student object
 interface Student {
@@ -17,7 +17,13 @@ export default function ClassMonitoringApp() {
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
+  // --- NEW STATE ---
+  const [showCelebration, setShowCelebration] = useState(false);
 
+  const totalStudents = students.length;
+  const presentCount = students.filter((s) => s.present).length;
+  const presentPercentage = totalStudents > 0 ? (presentCount / totalStudents) * 100 : 0;
+  
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
     year: "numeric",
@@ -26,31 +32,59 @@ export default function ClassMonitoringApp() {
   });
 
   const toggleAttendance = (id: number) => {
+    let newPresentCount = presentCount;
+
     setStudents((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? { ...s, present: !s.present, date: new Date().toLocaleDateString() }
-          : s
-      )
+      prev.map((s) => {
+        if (s.id === id) {
+            // Check if status is changing from Absent to Present
+            if (!s.present) {
+                newPresentCount++;
+            } else {
+                newPresentCount--;
+            }
+          return { ...s, present: !s.present, date: new Date().toLocaleDateString() }
+        }
+        return s;
+      })
     );
+    
+    // Check for full attendance immediately after state change simulation
+    if (newPresentCount > 0 && newPresentCount === totalStudents) {
+        setShowCelebration(true);
+    } else {
+        setShowCelebration(false);
+    }
   };
 
   const addStudent = () => {
     if (!newName.trim()) return;
-    setStudents((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        name: newName.trim(),
-        present: false,
-        date: new Date().toLocaleDateString(),
-      },
-    ]);
+    setStudents((prev) => {
+        // Dismiss celebration if we add a new student but they are not present
+        if (presentCount === totalStudents) setShowCelebration(false);
+
+        return [
+            ...prev,
+            {
+                id: Date.now(),
+                name: newName.trim(),
+                present: false,
+                date: new Date().toLocaleDateString(),
+            },
+        ];
+    });
     setNewName("");
   };
 
   const deleteStudent = (id: number) => {
-    setStudents((prev) => prev.filter((s) => s.id !== id));
+    setStudents((prev) => {
+        // Check if deleting the student breaks full attendance
+        const studentToDelete = prev.find(s => s.id === id);
+        if (studentToDelete && studentToDelete.present && presentCount === totalStudents) {
+            setShowCelebration(false);
+        }
+        return prev.filter((s) => s.id !== id);
+    });
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
   
@@ -62,6 +96,7 @@ export default function ClassMonitoringApp() {
     if (isConfirmed) {
       setStudents([]); 
       setSelectedStudentId(null);
+      setShowCelebration(false); // Ensure banner is dismissed
       alert("All students have been permanently deleted.");
     }
   };
@@ -85,6 +120,9 @@ export default function ClassMonitoringApp() {
         present: false,
         date: new Date().toLocaleDateString(),
       }));
+
+      // Importing new students breaks full attendance (since they are absent)
+      if (presentCount === totalStudents && newStudents.length > 0) setShowCelebration(false);
 
       setStudents(prev => [...prev, ...newStudents]);
       alert(`Successfully imported ${newStudents.length} students!`);
@@ -112,6 +150,7 @@ export default function ClassMonitoringApp() {
         }))
       );
       setSelectedStudentId(null);
+      setShowCelebration(false); // Reset also dismisses the banner
       alert("Attendance list has been reset for the new session.");
     }
   };
@@ -227,11 +266,7 @@ export default function ClassMonitoringApp() {
     // --- END DYNAMIC CONFETTI LOGIC ---
   };
 
-  const presentCount = students.filter((s) => s.present).length;
-  const totalStudents = students.length;
-  const presentPercentage = totalStudents > 0 ? (presentCount / totalStudents) * 100 : 0;
-
-  // --- Filtered Students Calculation ---
+  // --- Filtered Students Calculation (RETAINED) ---
   const filteredStudents = students.filter((student) => {
     if (filterStatus === 'PRESENT') {
         return student.present;
@@ -246,6 +281,22 @@ export default function ClassMonitoringApp() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-10 px-4 transition-colors">
       <div className="max-w-2xl mx-auto">
         
+        {/* Full Attendance Celebration Banner */}
+        {showCelebration && (
+            <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-lg flex items-center justify-between transition-all duration-300 transform animate-pulse">
+                <div className="flex items-center">
+                    <span className="text-3xl mr-3">🎉</span>
+                    <p className="font-bold text-lg">100% Attendance Achieved!</p>
+                </div>
+                <button 
+                    onClick={() => setShowCelebration(false)}
+                    className="text-green-500 hover:text-green-700 p-1"
+                >
+                    <XCircle className="w-5 h-5" />
+                </button>
+            </div>
+        )}
+
         {/* Header (Cleaned up alignment) */}
         <div className="text-center mb-10">
           <div className="flex items-center justify-center gap-2 mb-3">
@@ -429,7 +480,7 @@ export default function ClassMonitoringApp() {
                     onClick={() => toggleAttendance(student.id)}
                     className={`
                       px-4 py-2 rounded-lg font-medium text-white shadow-md transition-all 
-                      transform hover:scale-105 active:scale-95 duration-100 ease-out /* ADDED MICRO-INTERACTION */
+                      transform hover:scale-105 active:scale-95 duration-100 ease-out 
                       min-w-[100px] 
                       ${student.present
                         ? "bg-green-500 hover:bg-green-600"
