@@ -11,10 +11,8 @@ interface Student {
 }
 
 export default function ClassMonitoringApp() {
-  const [students, setStudents] = useState<Student[]>([
-    { id: 1, name: "Peter", present: true, date: new Date().toLocaleDateString() },
-    { id: 2, name: "John", present: false, date: new Date().toLocaleDateString() },
-  ]);
+  // REMOVED INITIAL EXAMPLE STUDENTS: John and Peter
+  const [students, setStudents] = useState<Student[]>([]); 
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
 
@@ -86,7 +84,6 @@ export default function ClassMonitoringApp() {
     event.target.value = '';
   };
   
-  // --- NEW: Reset Function ---
   const resetAttendance = () => {
     const isConfirmed = window.confirm(
       "Are you sure you want to reset the attendance for ALL students? This will mark everyone as ABSENT for a new session."
@@ -104,7 +101,6 @@ export default function ClassMonitoringApp() {
       alert("Attendance list has been reset for the new session.");
     }
   };
-  // --- END NEW FUNCTION ---
 
   const exportToCSV = () => {
     const headers = ["Name", "Status", "Last Updated"];
@@ -278,7 +274,7 @@ export default function ClassMonitoringApp() {
             </label>
           </div>
 
-          {/* NEW: Reset Attendance Button */}
+          {/* Reset Attendance Button */}
           <button
             onClick={resetAttendance}
             className="flex-1 bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-md hover:shadow-lg"
