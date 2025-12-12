@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-// Import icons for the new features: Sun (Light Mode), Moon (Dark Mode), and Trash2 (Delete All)
+// Import icons for the new features
 import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, Sun, Moon } from "lucide-react";
 
 // Define the type for a student object
@@ -10,33 +10,46 @@ interface Student {
     date: string;
 }
 
+// Function to get the initial dark mode status from localStorage or system preference
+const getInitialDarkMode = (): boolean => {
+    if (typeof window !== 'undefined') {
+        const savedTheme = localStorage.getItem('theme');
+        // Check saved theme first, then system preference
+        if (savedTheme === 'dark') {
+            return true;
+        }
+        if (savedTheme === 'light') {
+            return false;
+        }
+        // Fallback to system preference if no theme is saved
+        return window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+    return false;
+};
+
+
 export default function ClassMonitoringApp() {
   const [students, setStudents] = useState<Student[]>([]); 
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   
-  // --- NEW: Dark Mode State ---
-  const [isDarkMode, setIsDarkMode] = useState(() => {
-    if (typeof window !== 'undefined') {
-      const savedTheme = localStorage.getItem('theme');
-      return savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    return false;
-  });
+  // --- CORRECTED: Dark Mode State Initialization ---
+  const [isDarkMode, setIsDarkMode] = useState(getInitialDarkMode);
 
-  // --- NEW: Dark Mode Effect ---
+  // --- CORRECTED: Dark Mode Effect to apply changes and save preference ---
   useEffect(() => {
+    const root = document.documentElement;
     if (isDarkMode) {
-      document.documentElement.classList.add('dark');
+      root.classList.add('dark');
       localStorage.setItem('theme', 'dark');
     } else {
-      document.documentElement.classList.remove('dark');
+      root.classList.remove('dark');
       localStorage.setItem('theme', 'light');
     }
   }, [isDarkMode]);
 
   const toggleDarkMode = () => setIsDarkMode(prev => !prev);
-  // -----------------------------
+  // ------------------------------------------------
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -74,7 +87,7 @@ export default function ClassMonitoringApp() {
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
   
-  // --- NEW: Delete All Students Function ---
+  // --- Delete All Students Function ---
   const deleteAllStudents = () => {
     const isConfirmed = window.confirm(
       "WARNING: This action is irreversible. Are you absolutely sure you want to permanently delete ALL students from the roster?"
@@ -273,7 +286,7 @@ export default function ClassMonitoringApp() {
             </p>
           </div>
           
-          {/* NEW: Dark Mode Toggle Button */}
+          {/* Dark Mode Toggle Button */}
           <button
             onClick={toggleDarkMode}
             className="p-3 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors self-start ml-auto"
@@ -374,7 +387,7 @@ export default function ClassMonitoringApp() {
         {/* Students List Container */}
         <div className="space-y-4">
           
-          {/* Roster Header (Modified to include Delete All Button) */}
+          {/* Roster Header (with Delete All Button) */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Class Roster</h2>
             <button
