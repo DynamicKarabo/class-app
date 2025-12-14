@@ -1,6 +1,6 @@
 import { useState } from "react";
-// --- FIX 1: Added ListPlus to imports ---
-import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, XCircle, ListPlus } from "lucide-react"; 
+// Removed ListPlus from imports
+import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, XCircle } from "lucide-react"; 
 
 // Define the type for a student object
 interface Student {
@@ -13,7 +13,6 @@ interface Student {
 // Define the type for filter options
 type FilterStatus = 'ALL' | 'PRESENT' | 'ABSENT';
 
-// --- FIX 2: Changed to 'export default' ---
 export default function ClassMonitoringApp() {
   const [students, setStudents] = useState<Student[]>([]); 
   const [newName, setNewName] = useState("");
@@ -90,7 +89,6 @@ export default function ClassMonitoringApp() {
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
   
-  // Renamed to deleteAllStudents to perform the main cleanup action
   const deleteAllStudents = () => {
     const isConfirmed = window.confirm(
       "WARNING: This action is irreversible. Are you absolutely sure you want to permanently delete ALL students from the roster?"
@@ -104,20 +102,7 @@ export default function ClassMonitoringApp() {
     }
   };
   
-  // --- NEW FUNCTION ---
-  const createNewList = () => {
-    const isConfirmed = window.confirm(
-      "Are you sure you want to discard the current list and create a new, empty class roster? This action is irreversible."
-    );
-
-    if (isConfirmed) {
-      setStudents([]); 
-      setSelectedStudentId(null);
-      setShowCelebration(false);
-      alert("New empty class list created.");
-    }
-  };
-  // --- END NEW FUNCTION ---
+  // *** Removed createNewList function ***
 
   const importStudentsFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -439,30 +424,19 @@ export default function ClassMonitoringApp() {
         {/* Students List Container */}
         <div className="space-y-4">
           
-          {/* Roster Header (with New List and Delete All Buttons) */}
+          {/* Roster Header (with Delete All Button) */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Class Roster</h2>
             
-            {/* --- NEW BUTTON CONTAINER --- */}
-            <div className="flex items-center gap-2">
-                <button
-                    onClick={createNewList} 
-                    className="text-blue-600 dark:text-blue-400 p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors flex items-center gap-1 font-medium border border-blue-200 dark:border-blue-800"
-                    title="Start a New, Empty Class List"
-                >
-                    <ListPlus className="w-5 h-5" />
-                    New List
-                </button>
-                <button
-                    onClick={deleteAllStudents}
-                    className="text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center gap-1 font-medium"
-                    title="Permanently Delete All Students"
-                >
-                    <Trash2 className="w-5 h-5" />
-                    Delete Roster
-                </button>
-            </div>
-            {/* --- END NEW BUTTON CONTAINER --- */}
+            {/* *** Reverted to only the Delete Roster button *** */}
+            <button
+                onClick={deleteAllStudents}
+                className="text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center gap-1 font-medium"
+                title="Permanently Delete All Students"
+            >
+                <Trash2 className="w-5 h-5" />
+                Delete Roster
+            </button>
           </div>
 
           {/* Filter Buttons */}
