@@ -1,6 +1,6 @@
-import { useState } from "react";
-// Removed ListPlus from imports
-import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, XCircle } from "lucide-react"; 
+import { useState, useEffect } from "react";
+// Added ListPlus and BookOpen for UI
+import { Plus, Trash2, Users, Calendar, Download, Shuffle, Upload, RotateCcw, XCircle, ListPlus, BookOpen } from "lucide-react"; 
 
 // Define the type for a student object
 interface Student {
@@ -10,17 +10,70 @@ interface Student {
     date: string;
 }
 
+// --- NEW INTERFACE FOR ROSTER ---
+interface Roster {
+    id: string; // Unique ID for keying/selection
+    name: string; // The class name (e.g., "Math 101")
+    students: Student[];
+}
+// --- END NEW INTERFACE ---
+
 // Define the type for filter options
 type FilterStatus = 'ALL' | 'PRESENT' | 'ABSENT';
 
+// Helper to get initial state from Local Storage (for basic persistence)
+const getInitialRosters = (): Roster[] => {
+    try {
+        const storedRosters = localStorage.getItem('classRosters');
+        if (storedRosters) return JSON.parse(storedRosters);
+    } catch (error) {
+        console.error("Error loading rosters from local storage:", error);
+    }
+    // Default initial roster
+    return [{
+        id: 'default-01',
+        name: 'Default Class Roster',
+        students: [],
+    }];
+};
+
+const getInitialRosterName = (rosters: Roster[]): string => {
+    try {
+        const storedName = localStorage.getItem('currentRosterName');
+        // Ensure the stored name corresponds to an existing roster
+        if (storedName && rosters.some(r => r.name === storedName)) {
+            return storedName;
+        }
+    } catch (error) {
+        console.error("Error loading current roster name:", error);
+    }
+    return rosters[0].name;
+};
+
+
 export default function ClassMonitoringApp() {
-  const [students, setStudents] = useState<Student[]>([]); 
+  // --- UPDATED STATE MANAGEMENT ---
+  const [allRosters, setAllRosters] = useState<Roster[]>(getInitialRosters);
+  const [currentRosterName, setCurrentRosterName] = useState<string>(
+    () => getInitialRosterName(getInitialRosters())
+  );
+  const [showCelebration, setShowCelebration] = useState(false);
   const [newName, setNewName] = useState("");
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
-  // --- NEW STATE ---
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [showRosterSelector, setShowRosterSelector] = useState(false); // For dropdown UI
 
+  // Effect for Local Storage persistence
+  useEffect(() => {
+    localStorage.setItem('classRosters', JSON.stringify(allRosters));
+    localStorage.setItem('currentRosterName', currentRosterName);
+  }, [allRosters, currentRosterName]);
+  // --- END UPDATED STATE MANAGEMENT ---
+
+  // --- DERIVED STATE ---
+  const currentRoster = allRosters.find(r => r.name === currentRosterName) || allRosters[0];
+  const students = currentRoster ? currentRoster.students : [];
+  
   const totalStudents = students.length;
   const presentCount = students.filter((s) => s.present).length;
   const presentPercentage = totalStudents > 0 ? (presentCount / totalStudents) * 100 : 0;
@@ -32,24 +85,89 @@ export default function ClassMonitoringApp() {
     day: "numeric",
   });
 
+  // Helper to update the students array within the current roster
+  const updateCurrentRoster = (newStudents: Student[], resetCelebration = true) => {
+    setAllRosters(prevRosters => 
+        prevRosters.map(r => 
+            r.name === currentRosterName 
+            ? { ...r, students: newStudents } 
+            : r
+        )
+    );
+    if (resetCelebration) setShowCelebration(false);
+  };
+  // --- END DERIVED STATE ---
+  
+  // --- NEW ROSTER MANAGEMENT FUNCTIONS ---
+  const switchRoster = (name: string) => {
+      setCurrentRosterName(name);
+      setSelectedStudentId(null);
+      setShowCelebration(false);
+      setShowRosterSelector(false);
+  };
+
+  const addRoster = () => {
+      const name = prompt("Enter the name for the new class roster:");
+      if (name && name.trim() && !allRosters.some(r => r.name === name.trim())) {
+          const newRoster: Roster = {
+              id: Date.now().toString(),
+              name: name.trim(),
+              students: [],
+          };
+          setAllRosters(prev => [...prev, newRoster]);
+          switchRoster(newRoster.name);
+      } else if (name) {
+          alert("Invalid name or a roster with this name already exists.");
+      }
+  };
+
+  const deleteRoster = (name: string) => {
+      if (allRosters.length === 1) {
+          alert("Cannot delete the last remaining roster.");
+          return;
+      }
+
+      const isConfirmed = window.confirm(`Are you sure you want to permanently delete the roster "${name}"? This action is irreversible.`);
+      
+      if (isConfirmed) {
+          setAllRosters(prev => {
+              const remainingRosters = prev.filter(r => r.name !== name);
+              
+              // If we delete the current roster, switch to the first remaining one
+              if (currentRosterName === name) {
+                  setCurrentRosterName(remainingRosters[0].name);
+              }
+              setSelectedStudentId(null);
+              setShowCelebration(false);
+              return remainingRosters;
+          });
+          alert(`Roster "${name}" has been deleted.`);
+      }
+  };
+  // --- END NEW ROSTER MANAGEMENT FUNCTIONS ---
+
+  // --- UPDATED CORE FUNCTIONS (Now using updateCurrentRoster) ---
+
   const toggleAttendance = (id: number) => {
     let newPresentCount = presentCount;
+    let newStudents: Student[] = [];
 
-    setStudents((prev) =>
-      prev.map((s) => {
+    const updatedStudents = students.map((s) => {
         if (s.id === id) {
-            // Check if status is changing from Absent to Present
+            // Check if status is changing
             if (!s.present) {
                 newPresentCount++;
             } else {
                 newPresentCount--;
             }
-          return { ...s, present: !s.present, date: new Date().toLocaleDateString() }
+            return { ...s, present: !s.present, date: new Date().toLocaleDateString() }
         }
         return s;
-      })
-    );
-    
+    });
+
+    newStudents = updatedStudents;
+    updateCurrentRoster(newStudents, false); // Do not reset celebration yet
+
     // Check for full attendance immediately after state change simulation
     if (newPresentCount > 0 && newPresentCount === totalStudents) {
         setShowCelebration(true);
@@ -60,49 +178,45 @@ export default function ClassMonitoringApp() {
 
   const addStudent = () => {
     if (!newName.trim()) return;
-    setStudents((prev) => {
-        // Dismiss celebration if we add a new student but they are not present
-        if (presentCount === totalStudents) setShowCelebration(false);
+    
+    // Dismiss celebration if we add a new student but they are not present
+    if (presentCount === totalStudents) setShowCelebration(false);
 
-        return [
-            ...prev,
-            {
-                id: Date.now(),
-                name: newName.trim(),
-                present: false,
-                date: new Date().toLocaleDateString(),
-            },
-        ];
-    });
+    const newStudent: Student = {
+        id: Date.now(),
+        name: newName.trim(),
+        present: false,
+        date: new Date().toLocaleDateString(),
+    };
+
+    updateCurrentRoster([...students, newStudent]);
     setNewName("");
   };
 
   const deleteStudent = (id: number) => {
-    setStudents((prev) => {
-        // Check if deleting the student breaks full attendance
-        const studentToDelete = prev.find(s => s.id === id);
-        if (studentToDelete && studentToDelete.present && presentCount === totalStudents) {
-            setShowCelebration(false);
-        }
-        return prev.filter((s) => s.id !== id);
-    });
+    // Check if deleting the student breaks full attendance
+    const studentToDelete = students.find(s => s.id === id);
+    if (studentToDelete && studentToDelete.present && presentCount === totalStudents) {
+        setShowCelebration(false);
+    }
+    
+    const newStudents = students.filter((s) => s.id !== id);
+    updateCurrentRoster(newStudents, false);
+
     if (selectedStudentId === id) setSelectedStudentId(null);
   };
   
   const deleteAllStudents = () => {
     const isConfirmed = window.confirm(
-      "WARNING: This action is irreversible. Are you absolutely sure you want to permanently delete ALL students from the roster?"
+      `WARNING: This action is irreversible. Are you absolutely sure you want to permanently delete ALL students from the roster "${currentRosterName}"?`
     );
 
     if (isConfirmed) {
-      setStudents([]); 
+      updateCurrentRoster([]); 
       setSelectedStudentId(null);
-      setShowCelebration(false); // Ensure banner is dismissed
-      alert("All students have been permanently deleted.");
+      alert(`All students in "${currentRosterName}" have been permanently deleted.`);
     }
   };
-  
-  // *** Removed createNewList function ***
 
   const importStudentsFromFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -127,8 +241,8 @@ export default function ClassMonitoringApp() {
       // Importing new students breaks full attendance (since they are absent)
       if (presentCount === totalStudents && newStudents.length > 0) setShowCelebration(false);
 
-      setStudents(prev => [...prev, ...newStudents]);
-      alert(`Successfully imported ${newStudents.length} students!`);
+      updateCurrentRoster([...students, ...newStudents], false);
+      alert(`Successfully imported ${newStudents.length} students into "${currentRosterName}"!`);
     };
 
     reader.onerror = () => {
@@ -141,22 +255,23 @@ export default function ClassMonitoringApp() {
   
   const resetAttendance = () => {
     const isConfirmed = window.confirm(
-      "Are you sure you want to reset the attendance for ALL students? This will mark everyone as ABSENT for a new session."
+      `Are you sure you want to reset the attendance for ALL students in "${currentRosterName}"? This will mark everyone as ABSENT for a new session.`
     );
 
     if (isConfirmed) {
-      setStudents((prev) =>
-        prev.map((s) => ({
+      const newStudents = students.map((s) => ({
           ...s,
           present: false,
           date: new Date().toLocaleDateString(),
-        }))
-      );
+      }));
+
+      updateCurrentRoster(newStudents);
       setSelectedStudentId(null);
-      setShowCelebration(false); // Reset also dismisses the banner
-      alert("Attendance list has been reset for the new session.");
+      alert(`Attendance list for "${currentRosterName}" has been reset for the new session.`);
     }
   };
+  
+  // Export and Random Pick functions remain largely the same, using the 'students' derived state
 
   const exportToCSV = () => {
     const headers = ["Name", "Status", "Last Updated"];
@@ -173,7 +288,7 @@ export default function ClassMonitoringApp() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `attendance-${new Date().toISOString().split("T")[0]}.csv`);
+    link.setAttribute("download", `${currentRosterName.replace(/\s/g, '_')}-attendance-${new Date().toISOString().split("T")[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -192,7 +307,8 @@ export default function ClassMonitoringApp() {
     // --- DYNAMIC CONFETTI LOGIC (RETAINED) ---
     const colors = ["#2563EB", "#FACC15", "#48BB78", "#F56565", "#9F7AEA"]; 
     
-    const button = document.querySelector('.confetti-launch-button');
+    // We need a stable reference for confetti launch position
+    const button = document.querySelector('.confetti-launch-button'); 
     
     const buttonRect = button 
         ? button.getBoundingClientRect() 
@@ -316,8 +432,61 @@ export default function ClassMonitoringApp() {
             {today}
           </p>
         </div>
+        
+        {/* --- ROSTER SELECTOR BAR (NEW) --- */}
+        <div className="relative mb-6">
+            <button
+                onClick={() => setShowRosterSelector(prev => !prev)}
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl flex items-center justify-between transition-colors shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+                <div className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    <span className="truncate">{currentRosterName}</span>
+                </div>
+                <Users className="w-5 h-5" />
+            </button>
+            
+            {showRosterSelector && (
+                <div className="absolute top-full left-0 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl z-20 max-h-60 overflow-y-auto">
+                    {allRosters.map((roster) => (
+                        <div
+                            key={roster.id}
+                            className={`p-3 flex items-center justify-between cursor-pointer transition-colors ${
+                                currentRosterName === roster.name 
+                                    ? 'bg-blue-100 dark:bg-blue-900/50 font-bold text-blue-700 dark:text-blue-300' 
+                                    : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }`}
+                        >
+                            <span onClick={() => switchRoster(roster.name)} className="flex-1">
+                                {roster.name} ({roster.students.length})
+                            </span>
+                            {allRosters.length > 1 && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation(); // Prevent switchRoster trigger
+                                        deleteRoster(roster.name);
+                                    }}
+                                    className="p-1 text-red-500 hover:text-red-700 dark:hover:text-red-400 rounded transition-colors"
+                                    title={`Delete ${roster.name}`}
+                                >
+                                    <Trash2 className="w-4 h-4" />
+                                </button>
+                            )}
+                        </div>
+                    ))}
+                    <button
+                        onClick={addRoster}
+                        className="w-full p-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 text-blue-600 dark:text-blue-400 font-semibold rounded-b-xl flex items-center justify-center gap-2"
+                    >
+                        <ListPlus className="w-5 h-5" />
+                        Create New Roster
+                    </button>
+                </div>
+            )}
+        </div>
+        {/* --- END ROSTER SELECTOR BAR --- */}
 
-        {/* Stats Card (WITH PROGRESS BAR) */}
+        {/* Stats Card */}
         <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl p-6 mb-8 border border-gray-100 dark:border-gray-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -426,16 +595,17 @@ export default function ClassMonitoringApp() {
           
           {/* Roster Header (with Delete All Button) */}
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Class Roster</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+                Roster: {currentRosterName}
+            </h2>
             
-            {/* *** Reverted to only the Delete Roster button *** */}
             <button
                 onClick={deleteAllStudents}
                 className="text-red-600 dark:text-red-400 p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/30 transition-colors flex items-center gap-1 font-medium"
-                title="Permanently Delete All Students"
+                title={`Permanently Delete All Students in ${currentRosterName}`}
             >
                 <Trash2 className="w-5 h-5" />
-                Delete Roster
+                Clear List
             </button>
           </div>
 
@@ -456,10 +626,15 @@ export default function ClassMonitoringApp() {
             ))}
           </div>
 
-          {filteredStudents.length === 0 ? (
+          {filteredStudents.length === 0 && students.length > 0 ? (
             <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
               <Users className="w-8 h-8 mx-auto mb-3" />
-              <p className="font-medium">No students currently set to **{filterStatus}**.</p>
+              <p className="font-medium">No students currently set to **{filterStatus}** in this roster.</p>
+            </div>
+          ) : filteredStudents.length === 0 && students.length === 0 ? (
+            <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-xl">
+                <Users className="w-8 h-8 mx-auto mb-3" />
+                <p className="font-medium">This roster is empty. Add students manually above or import a list.</p>
             </div>
           ) : (
             filteredStudents.map((student) => (
