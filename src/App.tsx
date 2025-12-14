@@ -62,6 +62,10 @@ export default function ClassMonitoringApp() {
   const [selectedStudentId, setSelectedStudentId] = useState<number | null>(null);
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('ALL');
   const [showRosterSelector, setShowRosterSelector] = useState(false); // For dropdown UI
+  
+  // --- NEW STATE FOR EDITING ---
+  const [editingStudentId, setEditingStudentId] = useState<number | null>(null);
+  const [tempStudentName, setTempStudentName] = useState('');
 
   // Effect for Local Storage persistence
   useEffect(() => {
@@ -98,7 +102,39 @@ export default function ClassMonitoringApp() {
   };
   // --- END DERIVED STATE ---
   
-  // --- NEW ROSTER MANAGEMENT FUNCTIONS ---
+  // --- NEW EDITING LOGIC ---
+  const startEditing = (student: Student) => {
+      setEditingStudentId(student.id);
+      setTempStudentName(student.name);
+  };
+
+  const saveEditedName = (id: number) => {
+      if (!tempStudentName.trim()) {
+          alert("Student name cannot be empty.");
+          return;
+      }
+      
+      const newStudents = students.map(s => 
+          s.id === id ? { ...s, name: tempStudentName.trim() } : s
+      );
+      
+      updateCurrentRoster(newStudents);
+      setEditingStudentId(null);
+      setTempStudentName('');
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>, id: number) => {
+      if (e.key === 'Enter') {
+          saveEditedName(id);
+      }
+      if (e.key === 'Escape') {
+          setEditingStudentId(null);
+      }
+  };
+  // --- END NEW EDITING LOGIC ---
+
+
+  // --- ROSTER MANAGEMENT FUNCTIONS (Retained) ---
   const switchRoster = (name: string) => {
       setCurrentRosterName(name);
       setSelectedStudentId(null);
@@ -144,9 +180,9 @@ export default function ClassMonitoringApp() {
           alert(`Roster "${name}" has been deleted.`);
       }
   };
-  // --- END NEW ROSTER MANAGEMENT FUNCTIONS ---
+  // --- END ROSTER MANAGEMENT FUNCTIONS ---
 
-  // --- UPDATED CORE FUNCTIONS (Now using updateCurrentRoster) ---
+  // --- CORE FUNCTIONS (Retained) ---
 
   const toggleAttendance = (id: number) => {
     let newPresentCount = presentCount;
@@ -647,13 +683,51 @@ export default function ClassMonitoringApp() {
                 }`}
               >
                 <div className="flex-1">
-                  <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
-                    {student.name}
-                    {selectedStudentId === student.id && " 🎉"}
-                  </h3>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Last attendance update: {student.date}
-                  </p>
+                  {editingStudentId === student.id ? (
+                    // --- EDITING MODE UI ---
+                    <div className="flex items-center gap-2">
+                        <input
+                            type="text"
+                            value={tempStudentName}
+                            onChange={(e) => setTempStudentName(e.target.value)}
+                            onKeyDown={(e) => handleKeyPress(e, student.id)}
+                            className="text-xl font-semibold text-gray-800 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 border border-blue-500 rounded px-2 py-1 focus:outline-none focus:ring-1 ring-blue-500 w-full"
+                            autoFocus
+                        />
+                        <button
+                            onClick={() => saveEditedName(student.id)}
+                            className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded text-sm font-medium"
+                        >
+                            Save
+                        </button>
+                        <button
+                            onClick={() => setEditingStudentId(null)}
+                            className="p-1 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 rounded"
+                        >
+                            <XCircle className="w-5 h-5" />
+                        </button>
+                    </div>
+                    // --- END EDITING MODE UI ---
+                  ) : (
+                    // --- DISPLAY MODE UI ---
+                    <div onClick={() => startEditing(student)} className="cursor-pointer group">
+                        <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                            {student.name}
+                            {selectedStudentId === student.id && " 🎉"}
+                            <span className="text-sm ml-2 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                                (Click to edit)
+                            </span>
+                        </h3>
+                    </div>
+                    // --- END DISPLAY MODE UI ---
+                  )}
+                  
+                  {/* Display update info only if not editing */}
+                  {editingStudentId !== student.id && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Last attendance update: {student.date}
+                    </p>
+                  )}
                 </div>
                 <div className="flex items-center gap-3">
                   <button
@@ -667,12 +741,14 @@ export default function ClassMonitoringApp() {
                         : "bg-red-500 hover:bg-red-600"
                       }
                     `}
+                    disabled={editingStudentId === student.id}
                   >
                     {student.present ? "Present" : "Absent"}
                   </button>
                   <button
                     onClick={() => deleteStudent(student.id)}
                     className="p-2 text-red-500 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                    disabled={editingStudentId === student.id}
                   >
                     <Trash2 className="w-5 h-5" />
                   </button>
